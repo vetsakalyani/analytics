@@ -1,0 +1,725 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="width=device-width" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Access Google Analytics via API</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<style>
+/* -------------------------------------
+GLOBAL
+------------------------------------- */
+* {
+margin: 0;
+padding: 0;
+font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+font-size: 100%;
+line-height: 1.6;
+}
+iframe[src^="https://apis.google.com/u/0/_/widget/oauthflow/toast"]  {
+  display: none;
+}
+img {
+max-width: 100%;
+}
+body {
+-webkit-font-smoothing: antialiased;
+-webkit-text-size-adjust: none;
+width: 100%!important;
+height: 100%;
+}
+#accountDiv,#propertyDiv { margin:5px;}
+/* -------------------------------------
+ELEMENTS
+------------------------------------- */
+a {
+color: #348eda;
+}
+.btn-primary {
+text-decoration: none;
+color: #FFF;
+background-color: #348eda;
+border: solid #348eda;
+border-width: 10px 20px;
+line-height: 2;
+font-weight: bold;
+margin-right: 10px;
+text-align: center;
+cursor: pointer;
+display: inline-block;
+border-radius: 25px;
+}
+
+.last {
+margin-bottom: 0;
+}
+.first {
+margin-top: 0;
+}
+.padding {
+padding: 10px 0;
+}
+/* -------------------------------------
+BODY
+------------------------------------- */
+table.body-wrap {
+width: 100%;
+padding: 20px;
+}
+table.body-wrap .container {
+border: 1px solid #f0f0f0;
+}
+/* -------------------------------------
+FOOTER
+------------------------------------- */
+table.footer-wrap {
+width: 100%;
+clear: both!important;
+}
+.footer-wrap .container p {
+font-size: 12px;
+color: #666;
+}
+table.footer-wrap a {
+color: #999;
+}
+/* -------------------------------------
+TYPOGRAPHY
+------------------------------------- */
+h1, h2, h3 {
+font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+color: #000;
+margin: 40px 0 10px;
+line-height: 1.2;
+font-weight: 200;
+}
+h1 {
+font-size: 36px;
+}
+h2 {
+font-size: 28px;
+}
+h3 {
+font-size: 22px;
+}
+p, ul, ol {
+margin-bottom: 10px;
+font-weight: normal;
+font-size: 14px;
+}
+ul li, ol li {
+margin-left: 5px;
+list-style-position: inside;
+}
+/* ---------------------------------------------------
+RESPONSIVENESS
+Nuke it from orbit. It's the only way to be sure.
+------------------------------------------------------ */
+/* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */
+table.api{display:none;}
+.container {
+display: block!important;
+max-width: 600px!important;
+margin: 0 auto!important; /* makes it centered */
+clear: both!important;
+}
+/* Set the padding on the td rather than the div for Outlook compatibility */
+.body-wrap .container {
+padding: 20px;
+}
+/* This should also be a block element, so that it will fill 100% of the .container */
+.content {
+max-width: 600px;
+margin: 0 auto;
+display: block;
+}
+/* Let's make sure tables in the content area are 100% wide */
+.content table {
+width: 100%;
+}
+.modalDialog {
+	position: fixed;
+	font-family: Arial, Helvetica, sans-serif;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;	
+	z-index: 99999;
+	opacity:0;
+	-webkit-transition: opacity 400ms ease-in;
+	-moz-transition: opacity 400ms ease-in;
+	transition: opacity 400ms ease-in;
+	pointer-events: none;
+}
+
+
+
+.modalDialog:target {
+	opacity:1;
+	pointer-events: auto;
+}
+
+.modalDialog > div {
+	
+	background: none repeat scroll 0 0 #66CCFF  ;
+    border: 2px solid;
+    border-radius: 10px;
+    height: 416px;
+    margin: 10% auto;
+    padding: 5px 20px 13px;
+    position: relative;
+    width: 550px;
+}
+
+
+
+.close {
+	background: #606061;
+	color: #FFFFFF;
+	line-height: 25px;
+	position: absolute;
+	right: -12px;
+	text-align: center;
+	top: -10px;
+	width: 24px;
+	text-decoration: none;
+	font-weight: bold;
+	text-color: black;
+	-webkit-border-radius: 12px;
+	-moz-border-radius: 12px;
+	border-radius: 12px;
+	-moz-box-shadow: 1px 1px 3px #000;
+	-webkit-box-shadow: 1px 1px 3px #000;
+	box-shadow: 1px 1px 3px #000;
+}
+
+.close:hover { background: #00d9ff; }
+
+
+.api td{
+border:1px solid;
+border-collapse: collapse;
+text-align: center;
+}
+
+.api{
+border:1px solid;
+border-collapse: collapse;
+table-layout:fixed;
+}
+.table1 tr td{
+border:0px;
+}
+.table1 {
+margin-top:70px;
+margin-left: 20px;
+}
+.table2 {
+margin-left: 70px;
+}
+.table2 tr td{
+border:0px;
+}
+.table3 tr td{
+border:0px;
+}
+.btn_login{
+
+margin-top:30px;
+}
+ul{
+	list-style-type: none;
+}
+li.line{
+	display:inline;
+}
+h2{
+text-align:center;
+}
+#field{
+	margin-left:94px;
+}
+#matchType{
+	margin-left:47px;
+}
+#expressionValue{
+	margin-left:7px;
+}
+#caseSensitive{
+	margin-left:26px;
+}
+</style>
+
+
+<script src="https://plus.google.com/js/client:plusone.js" >
+</script>
+
+
+
+<script type="text/javascript">
+
+	
+	var view_datas=new Array();
+	var property_datas=new Array();
+	var check_values=new Array();
+
+	var gpclass = (function(){
+	 isSignedOut: true;
+	//Defining Class Variables here
+	var token = "";
+	var response = undefined;
+	var SCOPES = ['https://www.googleapis.com/auth/analytics.edit'];
+	
+	var apiKey='AIzaSyDbLT4TmDkbgxfMMF8qKuKckkgaIlspc4o';
+	
+	//var apiKey='XXXXXXXXX'; //Replace your api key here
+	return {
+		//Class functions / Objects
+		
+		mycoddeSignIn:function(response){
+			// The user is signed in
+			if (response) {
+				
+				if(response.status.google_logged_in!==false)
+				{
+				
+				document.getElementById('btn').style.visibility = 'hidden';
+			
+			        gapi.client.setApiKey(apiKey);
+				var s = gapi.client.load('analytics', 'v3', makeApiCall);
+				}
+				else
+				{
+				$('.g-signin').show();
+				$('.loading').hide();
+				}
+				//Get User Info from Google Plus API
+				//gapi.client.load('plus','v1',this.getUserInformation);
+				
+			} else {
+				
+				// There was an error, which means the user is not signed in.
+
+				 document.getElementById("btn").style.visibility = "visible";
+				
+				//alert('1There was an error: ' + authResult['error']);
+				
+			}
+		},
+		
+		
+	}; //End of Return
+	})();
+
+	
+	function makeApiCall() {
+	
+	  var request = gapi.client.analytics.management.profiles.list({
+   	  'accountId': '~all',
+    	  'webPropertyId': '~all',
+	
+  	  });
+          request.execute(handleCoreReportingResults);
+
+	  var request = gapi.client.analytics.management.webproperties.list({
+   	  'accountId': '~all',
+    	  'webPropertyId': '~all',
+	
+  	  });
+          request.execute(handleViewReportingResults);
+
+	var request =gapi.client.analytics.management.accounts.list();
+	 request.execute(handleAccountReportingResults);
+	
+	}
+	
+	function handleCoreReportingResults(results)
+	{	
+		var views=new Array();
+	 	if (!results.error) 
+		{
+		
+			for(var i=0;i<results.totalResults;i++)	
+			{			
+				var accountId=results.items[i].accountId;		
+				var propertyId=results.items[i].webPropertyId;
+				var id=results.items[i].id;
+				var name=results.items[i].name;
+				view_datas.push(Array(accountId,propertyId,name,id));
+			}
+							
+		    
+	  	}	
+		else 
+			{document.getElementById("btn").style.visibility = "visible";
+			}
+	}
+	
+
+	function handleViewReportingResults(results)
+	{		
+		var views=new Array();
+		
+	  	if (!results.error) {
+			//console.log(results);
+			for(var i=0;i<results.totalResults;i++)	
+			{			
+				var accountId=results.items[i].accountId;		
+				var name=results.items[i].name;//console.log(view[1][0]);
+				var id =results.items[i].id;
+				property_datas.push(Array(accountId,id,name));
+			}
+				    
+	  } else {
+	    //alert('3There was an error: ' + results.message);
+	  }
+	}
+
+	function handleAccountReportingResults(results)
+	{
+	if (!results.error) {
+
+var table = document.getElementById("api");
+
+	//console.log(view_datas);console.log(property_datas);
+
+		for(var i=0;i<results.totalResults;i++)	
+			{
+			var accountId=results.items[i].id;		
+			var name=results.items[i].name;
+
+
+	
+var theDiv = document.getElementById("accountDiv");
+var option = document.createElement("option");
+option.value = accountId;
+option.innerHTML= name;
+theDiv.add(option);
+
+			var property=new Array();
+			var views=new Array();
+			var views_id= new Array();
+				for(var j=0;j<property_datas.length;j++)
+				{				
+				if(property_datas[j][0]==accountId)
+					{					
+					property.push(property_datas[j][1]);
+					
+					}
+				}
+
+				for(var j=0;j<view_datas.length;j++)
+				{
+				if(view_datas[j][0]==accountId)
+					{
+					
+						views.push(view_datas[j][2]);
+						views_id.push(view_datas[j][0]); 
+
+					}
+				}	
+
+//console.log(name +' '+property +' '+views);
+
+			}
+	
+		
+	  } else {
+	    //alert('4There was an error: ' + results.message);
+	  }	
+change_property();
+	}
+	function property(val)
+	{	var theDiv = document.getElementById("propertyDiv");
+		var viewDiv = document.getElementById("viewDiv");
+		while(theDiv.firstChild){
+		    theDiv.removeChild(theDiv.firstChild);
+		}
+		while(viewDiv.firstChild){
+		    viewDiv.removeChild(viewDiv.firstChild);
+		}
+		for(var j=0;j<property_datas.length;j++)
+		{				
+		if(property_datas[j][0]==val)
+			{
+			var name=property_datas[j][1];
+			var id = property_datas[j][0];		
+			var content = document.createTextNode(name);
+			theDiv.appendChild(content);
+			var input = document.createElement('input');
+			input.setAttribute('type','submit');
+			input.setAttribute('id',id);
+			input.setAttribute('class','view');
+			input.setAttribute('onClick','view('+id+');');
+			input.setAttribute('value','>');
+			theDiv.appendChild(input);
+			linebreak = document.createElement("br");
+			theDiv.appendChild(linebreak);
+			}
+		}
+
+		
+	}
+	function view(val,propertyId)
+	{
+		var theDiv = document.getElementById("viewDiv");
+		while(theDiv.firstChild){
+		    theDiv.removeChild(theDiv.firstChild);
+		}
+
+		for(var j=0;j<view_datas.length;j++)
+		{				
+		if(view_datas[j][1]==propertyId)
+			{
+			//console.log(view_datas)
+			var accountId = view_datas[j][0];
+			var view_id = view_datas[j][3];
+			var name=view_datas[j][2];
+			var id = view_datas[j][1];					
+			var theDiv = document.getElementById("viewDiv");
+			var input = document.createElement('input');
+			input.setAttribute('type','checkbox');
+			input.setAttribute('class','cb');
+			input.setAttribute('value',view_id);
+			theDiv.appendChild(input);
+			var content = document.createTextNode(name);
+			theDiv.appendChild(content);			
+			linebreak = document.createElement("br");
+			theDiv.appendChild(linebreak);
+			}
+		}
+
+		$('.loading').hide();
+		$('table.api').show();
+		$('#addfil').show();
+
+		
+	}
+	$(document).on('change','#accountDiv', function() {
+
+			change_property();
+
+			
+		});
+
+$(document).on('change','#propertyDiv', function()  {
+
+			var propertyId=$('#propertyDiv option:selected').val();
+			var accountId=$('#accountDiv option:selected').val();
+			view(accountId,propertyId);
+
+		});
+
+
+	function change_property()
+	{
+
+	$("#propertyDiv").find('option').remove();
+	var val = $( "#accountDiv option:selected" ).val();
+		for(var j=0;j<property_datas.length;j++)
+		{	//console.log(property_datas);			
+			if(property_datas[j][0]==val)
+	  		{
+			var name=property_datas[j][2];
+			var id = property_datas[j][1];	
+			var theDiv = document.getElementById("propertyDiv");
+			var option = document.createElement("option");
+			option.value = id;
+			option.innerHTML= name;
+			theDiv.add(option);
+			}
+		}
+
+var propertyId=$('#propertyDiv option:selected').val();
+
+view(val,propertyId);
+
+
+	}
+	
+	function mycoddeSignIn(authResult) {
+
+
+        if (authResult['status']['method'] == 'PROMPT') {
+           
+            gpclass.mycoddeSignIn(authResult);
+        }
+	else
+	{
+	
+	}
+   
+	
+	}
+	function insertFilter() {
+		console.log(check_values);
+		var theDiv = document.getElementById("mess");
+		while(theDiv.firstChild){
+		    theDiv.removeChild(theDiv.firstChild);
+		}
+		
+		var error=false;
+		
+		for (var k=0;k<view_datas.length;k++)
+			{if(check_values[0]==view_datas[k][3])
+				{var acId =view_datas[k][0];}}	
+		var request = gapi.client.analytics.management.filters.insert(
+		    {
+		      'accountId': acId,
+		      'resource': {
+			'name': 'My Filter',
+			'type': 'EXCLUDE',
+			'excludeDetails': {
+			  'field': 'PAGE_HOSTNAME',
+			  'matchType': 'EQUAL',
+			  'expressionValue': 'not set',
+			  'caseSensitive': true
+			}
+		      }
+		    });
+		  request.execute(function (response) { console.log(response.id);
+			for (var i=0;i<check_values.length;i++){
+				for (var j=0;j<view_datas.length;j++){
+				if(check_values[i]==view_datas[j][3])
+					{
+		var request =gapi.client.analytics.management.profileFilterLinks.insert({
+      			'accountId':view_datas[j][0],
+      			'webPropertyId':view_datas[j][1],
+      			'profileId':view_datas[j][3],
+      			'filterRef': {
+              			'id': response.id
+					}
+         		 });
+   		request.execute(viewFilter);
+
+					}//if
+
+				}	
+		 
+			}check_values.length=0;
+			});		
+			
+		}//insertfilter
+		
+	function viewFilter(response)
+		{console.log(response);var message='';
+		if(response.code == 403)
+			{message='Permision error';}
+		else 
+			{message='Successfully Added View -- '+response.profileRef.name;}
+	
+		var msg = document.getElementById('mess');
+		msg.innerHTML += message+"</br>";
+		}		
+
+
+	function checkValues()
+	{
+	$("input[class=cb]:checked").each(
+            function() {
+                var checkBoxId = $(this).val();
+                check_values.push(checkBoxId);
+
+            });
+	if(check_values.length == 0){alert("Atleast one view must be checked");}
+	else{insertFilter();$('input:checkbox').removeAttr('checked'); }
+	}
+
+
+
+		
+</script>
+</head>
+<body bgcolor="#f6f6f6">
+<!-- body -->
+<table class="body-wrap" bgcolor="#f6f6f6">
+<tr>
+<td class="container" bgcolor="#FFFFFF">
+<!-- content -->
+<div class="content">
+<table>
+<tr>
+<td>
+<center>
+<h1>Google Analytics</h1>
+</center>
+
+<table>
+<tr>
+<td class="padding">
+<center>
+<button  class="g-signin btn_login btn-primary" id = "btn" value="Connect with Google Analytics"
+					data-scope="https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/analytics.edit"
+					data-requestvisibleactions="http://schemas.google.com/AddActivity"
+					data-clientId="398497995983-2pap1vrkufipov6r7av8st1uepl9dlnv.apps.googleusercontent.com"
+					data-accesstype="offline"
+					data-callback="mycoddeSignIn"
+					data-theme="dark"
+					data-immediate="false"
+					data-approval_prompt="force"
+					data-cookiepolicy="single_host_origin">Connect with Google Analytics
+				</button>
+
+
+
+<br><br>
+</center>
+<center class="loading" style="display:none;"> Loading Please Wait ... </center>
+<table class = "api">
+	<tr >
+	<td>Account</td>
+	<td>Property</td>
+	<td>View</td>
+	</tr>
+	<tr>
+	<td><select id = "accountDiv"></select></td>
+	<td><select id = "propertyDiv"></select></td>
+	<td><div id = "viewDiv"></div></td>
+	</tr>
+</table>
+<div id = "addfil" style = "display:none;">
+<br>
+<button  id="addfilter" onClick = "checkValues();" >Add Filters</button>
+</div>
+</td>
+</tr>
+<tr><td><div id = "mess"></div> </td></tr>
+</table>
+
+</td>
+</tr>
+</table>
+</div>
+<!-- /content -->
+</td>
+
+</tr>
+</table>
+<!-- /body -->
+<!-- footer -->
+<table class="footer-wrap">
+<tr>
+<td></td>
+<td class="container">
+<!-- content -->
+<div class="content">
+<table>
+<tr>
+<td align="center">
+
+
+</td>
+</tr>
+</table>
+</div>
+<!-- /content -->
+</td>
+<td></td>
+</tr>
+</table>
+<!-- /footer -->
+</body>
+</html>
+
+
+
